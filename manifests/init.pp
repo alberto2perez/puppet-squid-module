@@ -56,7 +56,7 @@ class squid(
   }
 
   file { 
-    ${cache_dir}:
+    "${cache_dir}":
       ensure  => 'directory',
       owner   => $user,
       group   => $group,
@@ -64,7 +64,7 @@ class squid(
       require => 'squid3',
   }
   file { 
-    ${ssldb_dir}:
+    "${ssldb_dir}":
       ensure  => 'directory',
       owner   => $user,
       group   => $group,
