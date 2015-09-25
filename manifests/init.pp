@@ -17,90 +17,95 @@ class squid(
   $user = 'proxy'
   $group = 'proxy'
 
-  package { 
-    'devscripts': 
-      ensure =>'present',
-      before => 'build-essential',
-  }
-  package { 
-    'build-essential': 
-      ensure => 'present',
-      after => 'devscripts',
-      before => 'libssl-dev',
-  }
-  package { 
-    'libssl-dev':
-      ensure => 'present', 
-      after => 'build-essential',
-      before => 'download-squid-source',
-  }
-  
-  exec { "download-squid-source":
-    cwd     => "/tmp",
-    command => "/usr/bin/wget -q $download squid.tar.gz",
-    timeout => 120, # 2 minutes
-    after => 'libssl-dev'
-  }
-  
-  exec { "uncompress":
-    cwd     => "/tmp",
-    command => " tar xzf squid.tar.gz",
-    after => 'download-squid-source'
-  }
-  
+ if defined( Package["squid3"] ) {
+    debug("$package already installed")
+  } else {
 
-  exec { "configure":
-    cwd     => "/tmp/squid*",
-    command => "./configure ${configuration_options}",
-    after => 'uncompress',
-  } 
+    package { 
+      'devscripts': 
+        ensure =>'present',
+        before => 'build-essential',
+    }
+    package { 
+      'build-essential': 
+        ensure => 'present',
+        after => 'devscripts',
+        before => 'libssl-dev',
+    }
+    package { 
+      'libssl-dev':
+        ensure => 'present', 
+        after => 'build-essential',
+        before => 'download-squid-source',
+    }
+    
+    exec { "download-squid-source":
+      cwd     => "/tmp",
+      command => "/usr/bin/wget -q $download squid.tar.gz",
+      timeout => 120, # 2 minutes
+      after => 'libssl-dev'
+    }
+    
+    exec { "uncompress":
+      cwd     => "/tmp",
+      command => " tar xzf squid.tar.gz",
+      after => 'download-squid-source'
+    }
+    
 
-  exec { "make-and-install":
-    cwd     => "/tmp/squid*",
-    command => "make && make install",
-    after => 'configure',
-  } 
+    exec { "configure":
+      cwd     => "/tmp/squid*",
+      command => "./configure ${configuration_options}",
+      after => 'uncompress',
+    } 
 
-  file { 
-    '/etc/squid3/squid.conf':
-      ensure  => 'file',
-      owner   => 'root',
-      group   => 'root',
-      mode    => '0644',
-      content => template("squid/templates/squid.conf.erb"),
-      require => 'squid3',
-  }
+    exec { "make-and-install":
+      cwd     => "/tmp/squid*",
+      command => "make && make install",
+      after => 'configure',
+    } 
 
-  file { 
-    "${cache_dir}":
-      ensure  => 'directory',
-      owner   => $user,
-      group   => $group,
-      mode    => '0755',
-      require => 'squid3',
-  }
-  file { 
-    "${ssldb_dir}":
-      ensure  => 'directory',
-      owner   => $user,
-      group   => $group,
-      mode    => '0755',
-      require => 'squid3',
-  }
-  exec { 
-    'Init cache dir':
-      command => "squid3 stop && squid3 -z",
-      creates => "${cache_dir}/00",
-      notify  => 'squid3',
-      require => [ File[$cache_dir], File[$config_file] ],
-  }
+    file { 
+      '/etc/squid3/squid.conf':
+        ensure  => 'file',
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0644',
+        content => template("squid/templates/squid.conf.erb"),
+        require => 'squid3',
+    }
 
-  service { 
-    'squid3':
-      ensure    => 'running',
-      enable    => true,
-      require   => Package[$package],
-      restart   => '/etc/init.d/squid3 reload',
-      subscribe => File['/etc/squid3/squid.conf'],
+    file { 
+      "${cache_dir}":
+        ensure  => 'directory',
+        owner   => $user,
+        group   => $group,
+        mode    => '0755',
+        require => 'squid3',
+    }
+    file { 
+      "${ssldb_dir}":
+        ensure  => 'directory',
+        owner   => $user,
+        group   => $group,
+        mode    => '0755',
+        require => 'squid3',
+    }
+    exec { 
+      'Init cache dir':
+        command => "squid3 stop && squid3 -z",
+        creates => "${cache_dir}/00",
+        notify  => 'squid3',
+        require => [ File[$cache_dir], File[$config_file] ],
+    }
+
+    service { 
+      'squid3':
+        ensure    => 'running',
+        enable    => true,
+        require   => Package["squid3"],
+        restart   => '/etc/init.d/squid3 reload',
+        subscribe => File['/etc/squid3/squid.conf'],
+    }
   }
 }
