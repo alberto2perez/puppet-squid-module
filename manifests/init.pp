@@ -18,21 +18,21 @@ class squid(
 
   package { 'devscripts': 
     ensure: present,
-    before: 'build-essential'
+    before: 'build-essential',
   }
   package { 'build-essential': 
     ensure: present,
     after: 'devscripts',
-    before: 'libssl-dev'
+    before: 'libssl-dev',
   }
   package { 'libssl-dev':
     ensure: present, 
     after: build-essential,
-    before: puppet-module-build
+    before: puppet-module-build,
   }
   
   class { 'puppet-module-build': 
-    after: 'build_essentials'
+    after: 'build_essentials',
   }
 
   build::install { 'squid3':
