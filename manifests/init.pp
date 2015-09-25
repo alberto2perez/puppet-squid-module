@@ -18,24 +18,25 @@ class squid(
 
   package { 
     'devscripts': 
-      ensure: present,
+      ensure: 'present',
       before: 'build-essential',
   }
   package { 
     'build-essential': 
-      ensure: present,
+      ensure: 'present',
       after: 'devscripts',
       before: 'libssl-dev',
   }
   package { 
     'libssl-dev':
-      ensure: present, 
-      after: build-essential,
-      before: puppet-module-build,
+      ensure: 'present', 
+      after: 'build-essential',
+      before: 'puppet-module-build',
   }
   
-  class { 'puppet-module-build': 
-    after: 'build_essentials',
+  class { 
+    'puppet-module-build': 
+      after: 'build_essentials',
   }
 
   build::install { 
@@ -46,29 +47,29 @@ class squid(
 
   file { 
     '/etc/squid3/squid.conf':
-      ensure  => file,
-      owner   => root,
-      group   => root,
+      ensure  => 'file',
+      owner   => 'root',
+      group   => 'root',
       mode    => '0644',
       content => template("squid/templates/squid.conf.erb"),
-      require => squid3,
+      require => 'squid3',
   }
 
   file { 
     ${cache_dir}:
-      ensure  => directory,
+      ensure  => 'directory',
       owner   => $user,
       group   => $group,
       mode    => '0755',
-      require => squid3,
+      require => 'squid3',
   }
   file { 
     ${ssldb_dir}:
-      ensure  => directory,
+      ensure  => 'directory',
       owner   => $user,
       group   => $group,
       mode    => '0755',
-      require => squid3,
+      require => 'squid3',
   }
   exec { 
     'Init cache dir':
@@ -80,7 +81,7 @@ class squid(
 
   service { 
     'squid3':
-      ensure    => running,
+      ensure    => 'running',
       enable    => true,
       require   => Package[$package],
       restart   => '/etc/init.d/squid3 reload',
