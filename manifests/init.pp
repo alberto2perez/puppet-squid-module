@@ -41,8 +41,8 @@ class squid(
 
   build::install { 
     'squid3':
-      download => ${download},
-      buildoptions  => ${buildoptions},
+      download => "${download}",
+      buildoptions  => "${buildoptions}",
   }
 
   file { 
