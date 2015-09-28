@@ -70,7 +70,7 @@ class squid(
         owner   => 'root',
         group   => 'root',
         mode    => '0644',
-        content => template("squid/templates/squid.conf.erb"),
+        content => template("squid/squid.conf.erb"),
         require => 'squid3',
     }
 
