@@ -28,13 +28,11 @@ class squid(
     package { 
       'build-essential': 
         ensure => 'present',
-        after => 'devscripts',
         before => 'libssl-dev',
     }
     package { 
       'libssl-dev':
         ensure => 'present', 
-        after => 'build-essential',
         before => 'download-squid-source',
     }
     
@@ -71,7 +69,8 @@ class squid(
         group   => 'root',
         mode    => '0644',
         content => template("squid/squid.conf.erb"),
-        require => 'squid3',
+        # require => 'squid3',
+        after => 'squid3'
     }
 
     file { 
@@ -80,7 +79,8 @@ class squid(
         owner   => $user,
         group   => $group,
         mode    => '0755',
-        require => 'squid3',
+        # require => 'squid3',
+        after => 'squid3'
     }
     file { 
       "${ssldb_dir}":
@@ -88,7 +88,8 @@ class squid(
         owner   => $user,
         group   => $group,
         mode    => '0755',
-        require => 'squid3',
+        # require => 'squid3',
+        after => 'squid3'
     }
     exec { 
       'Init cache dir':
@@ -96,6 +97,7 @@ class squid(
         creates => "${cache_dir}/00",
         notify  => 'squid3',
         require => [ File[$cache_dir], File[$config_file] ],
+        after => 'squid3'
     }
 
     service { 
