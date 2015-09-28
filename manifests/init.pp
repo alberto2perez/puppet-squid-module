@@ -36,17 +36,19 @@ class squid(
         before => 'download-squid-source',
     }
     
-    exec { "download-squid-source":
+    exec { 'download-squid-source':
       cwd     => "/tmp",
       command => "/usr/bin/wget -q $download squid.tar.gz",
       timeout => 120, # 2 minutes
-      after => 'libssl-dev'
+      require => 'libssl-dev'
+      before => 'uncompress'
     }
     
     exec { "uncompress":
       cwd     => "/tmp",
       command => " tar xzf squid.tar.gz",
-      after => 'download-squid-source'
+      require => 'download-squid-source'
+      before => 'configure'
     }
     
 
