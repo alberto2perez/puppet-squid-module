@@ -19,49 +19,37 @@ class squid(
  if defined( Package["squid3"] ) {
     debug("$package already installed")
   } else {
+     $requirements = [
+                 "devscripts",
+                 "libssl-dev",
+                 "build-essential"
+                 ]
 
     package { 
-      'devscripts': 
+      $requirements: 
         ensure =>'present',
-        # before => Package['build-essential'],
     }->
-    package { 
-      'build-essential': 
-        ensure => 'present',
-        # before => Package['libssl-dev'],
-    }
-    package { 
-      'libssl-dev':
-        ensure => 'present', 
-        # before => Exec['download-squid-source'],
-    }->
-    
     exec { 'download-squid-source':
       cwd     => "/tmp",
-      command => "cd /tmp && /usr/bin/wget -q $download squid.tar.gz",
+      command => "/usr/bin/wget -q $download -O squid.tar.gz",
       timeout => 120, # 2 minutes
-      require => Package['libssl-dev'],
       # before => Exec['uncompress']
     }->
     
     exec { "uncompress":
       cwd     => "/tmp",
       command => "tar xzf /tmp/squid.tar.gz",
-      require => Exec['download-squid-source'],
       # before => Exec['configure']
     }->
-    
 
     exec { "configure":
       cwd     => "/tmp/squid*",
       command => "./configure ${build_options}",
-      # after => Exec['uncompress'],
     }->
 
     exec { 'make-and-install':
       cwd     => "/tmp/squid*",
       command => "make && make install",
-      # after => Exec['configure'],
     }->
 
     file { 
