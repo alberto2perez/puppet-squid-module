@@ -38,7 +38,7 @@ class squid(
     
     exec { 'download-squid-source':
       cwd     => "/tmp",
-      command => "/usr/bin/wget -q $download squid.tar.gz",
+      command => "cd /tmp && /usr/bin/wget -q $download squid.tar.gz",
       timeout => 120, # 2 minutes
       require => Package['libssl-dev'],
       # before => Exec['uncompress']
