@@ -46,7 +46,7 @@ class squid(
     
     exec { "uncompress":
       cwd     => "/tmp",
-      command => " tar xzf squid.tar.gz",
+      command => "tar xzf /tmp/squid.tar.gz",
       require => Exec['download-squid-source'],
       # before => Exec['configure']
     }->
