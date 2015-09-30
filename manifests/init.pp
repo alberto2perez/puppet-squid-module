@@ -23,45 +23,45 @@ class squid(
     package { 
       'devscripts': 
         ensure =>'present',
-        before => 'build-essential',
+        before => Package['build-essential'],
     }
     package { 
       'build-essential': 
         ensure => 'present',
-        before => 'libssl-dev',
+        before => Package['libssl-dev'],
     }
     package { 
       'libssl-dev':
         ensure => 'present', 
-        before => 'download-squid-source',
+        before => Exec['download-squid-source'],
     }
     
     exec { 'download-squid-source':
       cwd     => "/tmp",
       command => "/usr/bin/wget -q $download squid.tar.gz",
       timeout => 120, # 2 minutes
-      require => 'libssl-dev'
-      before => 'uncompress'
+      require => Package['libssl-dev'],
+      before => Exec['uncompress']
     }
     
     exec { "uncompress":
       cwd     => "/tmp",
       command => " tar xzf squid.tar.gz",
-      require => 'download-squid-source'
-      before => 'configure'
+      require => Exec['download-squid-source'],
+      before => Exec['configure']
     }
     
 
     exec { "configure":
       cwd     => "/tmp/squid*",
       command => "./configure ${build_options}",
-      after => 'uncompress',
+      after => Exec['uncompress'],
     } 
 
-    exec { "make-and-install":
+    exec { 'make-and-install':
       cwd     => "/tmp/squid*",
       command => "make && make install",
-      after => 'configure',
+      after => Exec['configure'],
     } 
 
     file { 
@@ -72,7 +72,7 @@ class squid(
         mode    => '0644',
         content => template("squid/squid.conf.erb"),
         # require => 'squid3',
-        after => 'squid3'
+        after => Exec['make-and-install']
     }
 
     file { 
@@ -82,7 +82,7 @@ class squid(
         group   => $group,
         mode    => '0755',
         # require => 'squid3',
-        after => 'squid3'
+        after => File['/etc/squid3/squid.conf']
     }
     file { 
       "${ssldb_dir}":
@@ -91,7 +91,7 @@ class squid(
         group   => $group,
         mode    => '0755',
         # require => 'squid3',
-        after => 'squid3'
+        after => File["${cache_dir}"]
     }
     exec { 
       'Init cache dir':
@@ -99,7 +99,7 @@ class squid(
         creates => "${cache_dir}/00",
         notify  => 'squid3',
         require => [ File[$cache_dir], File[$config_file] ],
-        after => 'squid3'
+        after => Exec["${ssldb_dir}"]
     }
 
     service { 
@@ -108,7 +108,7 @@ class squid(
         enable    => true,
         require   => Package["squid3"],
         restart   => '/etc/init.d/squid3 reload',
-        subscribe => File['/etc/squid3/squid.conf'],
+        subscribe => Exec['Init cache dir'],
     }
   }
 }
